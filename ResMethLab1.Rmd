@@ -446,7 +446,6 @@ fish.data=data.frame(sitenumber=1:100,
 Quick look:
 ```{r}
 plot(fish.population~food,fish.data)
-
 ```
 
 Want to do a Poisson regression? No worries mate, you just use the “glm()” function and set the argument “family” to “Poisson” (go figure…):
@@ -488,23 +487,18 @@ fish.res$coefficients
 ```
 
 
-(Intercept)        food
-  0.8767657        1.5982324
 This is a list from which we can extract the coefficient on the log-scale for our food effect.
-
 ```{r}
 fish.res$coefficients[["food"]]
 ```
 
-1.598232
-Which in turn can be used to express our population growth rate depending on the food availability. Since this coefficient is on the log scale, we need to use the inverse function of the log, i.e. the exponential, in order to get this information.
 
+Which in turn can be used to express our population growth rate depending on the food availability. Since this coefficient is on the log scale, we need to use the inverse function of the log, i.e. the exponential, in order to get this information.
 ```{r}
 exp(fish.res$coefficients[["food"]])
 ```
 
 
-4.944285
 Every time we add one food unit on the standardized scale, the fish population will be 4.9 times larger. In a real life situation, we would also back transform the standardized covariate “food” to give a clearer ecological description of our dynamic.
 
 And, as for the previous fitted models, we can plot the fitted line in the following way:
