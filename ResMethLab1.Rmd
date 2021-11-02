@@ -72,8 +72,6 @@ plot(results)
 ```
 
 
-
-
 ```{r}
 plot(price ~ purity, data = profit)  
 ```
@@ -192,7 +190,6 @@ summary(lm(y~x1+x2))
 #Without intercept:
 
 summary(lm(y~x1+x2-1))
-
 ```
 
 While this might not appear important here, this can become interesting to use when using factors, as -by default- the first factor class will be equal use as the intercept.
@@ -202,7 +199,6 @@ If you work with ecological questions, you will want to consider possible intera
 honey=c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5)
 stir=c(1,2,3,4,5,6,7,8,9,10,11)
 sweetness= 0.1*honey + 0*stir + 2*honey*stir + rnorm(length(honey),0,1)
-
 ```
 
 Sweetness in function of honey and stirring, but without considering the interaction:
@@ -223,7 +219,6 @@ Much better! By the way, instead of writing this long equation saying “take my
 summary(lm(sweetness~honey*stir))
 ```
 
-
 In this case, the multiplication is not considered in its mathematical meaning. If you want to use a mathematical operation with its mathematical meaning instead of its “model specification meaning”, you have to input the corresponding element with the function ‘I()‘. For example:
 ```{r}
 x=c(1,2,3,4,5,6,7,8,9,10)
@@ -238,7 +233,6 @@ summary(lm(y~x))
 Doesn’t really make sense. Let’s include the quadratic component on top of the linear component:
 ```{r}
 summary(lm(y~I(x*x)+x))
-
 ```
 
 
@@ -253,6 +247,7 @@ A generalization of this approach can be used when dealing with a response varia
 3/ Discrete: Trying to model a population’s abundance. We are counting individuals. Chances are that we are not going to find 0.24 or 17.2 or 82.7458 individuals. We are modeling a discrete number of individuals. The linear approach could not only give us half individuals in the regression, but could also lead us to predict negative numbers of individuals for certain values of the covariates.
 
 We need a solution to accommodate those situations! Enter the GLMs! The Generalized Linear Models. (Normally, as you read that, The Ride of the Valkyries should be playing in your head.) GLMs are composed of three elements: a probability distribution, a link function and a linear predictor. The probability distribution illustrates the randomness in the response variable. The link function “links” the parameters controlling the probability distribution parameter(s) to the linear predictor. The linear predictor is a linear combination of covariates we hypothesize to be related to the response variable.
+
 
 
 Distributions
@@ -273,7 +268,6 @@ hist(rpois(100000,lambda=100*0.05),add=T,col="#0000ff66")
 ```
 
 
-
 In yellow, the binomial distribution. In blue, the approximating Poisson distribution. In grey(ish) the overlap between the two. Not bad, right?
 
 
@@ -285,6 +279,7 @@ The link function for the normal distribution is the identity function. Basicall
 The link function for the binomial distribution is the logit function. It allows to define a linear combination that varies between -Infinity and + Infinity and to transfer it on a 0 to 1 probability scale. For information, the logit of a probability ‘p’ is equal to the logarithm of the odds:
 
 
+logit(p) = log(p / (1-p))
 
 The link function for the Poisson distribution is the log function.
 
@@ -327,8 +322,6 @@ First things first, let’s take a look at our data.
 plot(ndetect~slope, data=data)
 ```
 
-
-
 In order to conduct a logistic regression, we proceed as for the linear regression, but we also set the argument “family” to “binomial”:
 
 ```{r}
@@ -344,23 +337,7 @@ A look at the results with the function “summary()“:
 ```{r}
 summary(dahu.res)
 ```
-Call:
-glm(formula = cbind(ndetect, nNOdetect) ~ slope, family = binomial,
-    data = data)
-Deviance Residuals:
-     Min        1Q    Median        3Q       Max
--1.08294  -0.81103   0.02806   0.66110   1.14596
-Coefficients:
-            Estimate Std. Error z value Pr(>|z|)
-(Intercept)  -0.4109     0.4906  -0.837  0.40238
-slope         1.9383     0.5398   3.591  0.00033 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-(Dispersion parameter for binomial family taken to be 1)
-    Null deviance: 35.412  on 9  degrees of freedom
-Residual deviance:  6.534  on 8  degrees of freedom
-AIC: 19.733
-Number of Fisher Scoring iterations: 5
+
 As for the linear models we have used so far, R returns estimates of the model coefficients, and their statistical significance. Here, the intercept’s mean is -0.4109, but with an associated probability of 0.4028 is not statistically significant. The slope effect is 1.9383 and is highly significant. Estimates of the standard error around those means can be used to construct confidence intervals. We also get Akaike’s Information Criterion and model deviance, which are commonly used to choose between competing models.
 
 We can also evaluate the overall performance of the model. The null deviance shows how well the response is predicted by a model with nothing but an intercept. This is essentially a chi square value on 9 degrees of freedom, and indicates very little fit (a highly significant difference between fitted values and observed values).
@@ -369,7 +346,6 @@ We can also evaluate the overall performance of the model. The null deviance sho
 ```
 
 
-5.039208e-05
 Adding in our predictor decreased the deviance by 28.878 (=35.412-6.534) points on 1 degree of freedom. The residual deviance is 6.534 on 8 degrees of freedom. We use this to test the overall fit of the model by once again treating this as a chi square value.
 
 ```{r}
@@ -396,7 +372,6 @@ resp.pred <- predict(dahu.res, newdata=expl.pred, type="response")
 ```
 
 
-
 Now, we just have to plot all of that. Remember that the predict function return fitted results on the probability scale, and therefore we need to plot the ratio of detection over the total number of sampling occasion (instead of simply the number of detections) in function of the covariate. The function “title()” is used to add a title and possibly other elements to a graph (more details on that in the next section).
 
 ```{r}
@@ -420,10 +395,6 @@ pred.linkscale.CI2.5=pred.linkscale$fit-1.96*pred.linkscale$se.fit
 pred.linkscale.CI97.5=pred.linkscale$fit+1.96*pred.linkscale$se.fit 
 ```
 
-```{r}
-
-```
-
 
 Let’s back-transform from the linear scale to the response scale. To do that, we can feed the predicted values on the linear scale to the inverse link function. It’s possible to access the family used in the analysis with the function “family()”. This function takes as argument the object containing the GLM results, and returns (among other things) the inverse link function in the element “linkinv”.
 
@@ -432,18 +403,13 @@ pred.respScale.CI=data.frame(
                     CI2.5=family(dahu.res)$linkinv(pred.linkscale.CI2.5),
                     CI97.5=family(dahu.res)$linkinv(pred.linkscale.CI97.5)
                              )
-What’s left to do? Simply plot the corresponding lines!
+#What’s left to do? Simply plot the corresponding lines!
 
 # Lower CI 95%
 lines(pred.respScale.CI$CI2.5~expl.pred$slope,lty="dashed")
 # Upper CI 95%
 lines(pred.respScale.CI$CI97.5~expl.pred$slope,lty="dashed") 
 ```
-
-
-
-
-Not too shabby, is it?
 
 
 The Poisson regression
@@ -498,30 +464,12 @@ summary(fish.res)
 ```
 
 
-Call:
-glm(formula = fish.population ~ food, family = poisson, data = fish.data)
-Deviance Residuals:
-     Min        1Q    Median        3Q       Max
--2.41700  -0.82552  -0.00656   0.59693   2.08337
-Coefficients:
-            Estimate Std. Error z value Pr(>|z|)
-(Intercept)  0.87677    0.07580   11.57   <2e-16 ***
-food         1.59823    0.05891   27.13   <2e-16 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-(Dispersion parameter for poisson family taken to be 1)
-    Null deviance: 1090.685  on 99  degrees of freedom
-Residual deviance:   92.837  on 98  degrees of freedom
-AIC: 365.86
-Number of Fisher Scoring iterations: 5
 First things first, how is the model fitting? The Null deviance and the corresponding degrees of freedom indicate a highly significant difference between fitted values and observed values:
 
 ```{r}
 1-pchisq(fish.res$null.deviance,fish.res$df.null)
 ```
 
-
-0
 Noticed how I directly extracted the “null.deviance” and the number of degrees of freedom “df.null” from the GLM output?
 
 Once the predictor is added, it’s a different story!
