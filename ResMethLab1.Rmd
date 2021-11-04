@@ -185,11 +185,11 @@ y = 4*x1 + 3*x2
 
 #With intercept:
 
-summary(lm(y~x1+x2))
+summary(lm(y ~x1 + x2))
 
 #Without intercept:
 
-summary(lm(y~x1+x2-1))
+summary(lm(y ~x1 + x2 - 1))
 ```
 
 While this might not appear important here, this can become interesting to use when using factors, as -by default- the first factor class will be equal use as the intercept.
@@ -319,7 +319,7 @@ data <-data.frame(
 First things first, let’s take a look at our data.
 
 ```{r}
-plot(ndetect~slope, data=data)
+plot(ndetect ~slope, data = data)
 ```
 
 In order to conduct a logistic regression, we proceed as for the linear regression, but we also set the argument “family” to “binomial”:
