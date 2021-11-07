@@ -11,6 +11,25 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)
+```
+
+Correlation  
+  
+When interested in the relationship between two quantitative variables, two factors need to be carefully considered. The question “is there a link between variables X and Y?” has to be approach simultaneously from two directions. First, the study of the correlation aims at identifying the strength of a relationship (if it exists). Then, the regression analysis will look to characterize the slope of the line that sums up the relationship between X and Y.
+
+In R,  typically, the correlation is tested with the function “cor.test()”, while the regression is performed with the function “lm()”, or “glm()” for more complex approaches.
+
+If the two variables are bivariately normally distributed, it is possible to use Pearson’s product-moment correlation, also called Pearson’s R. What it means is that if one variable is fixed, the other one should be normally distributed. Practically, this assumption is met most of the time when dealing with a lot of data (as usual).
+
+The correlation coefficient will vary between 1 (perfect positive correlation) and -1 (perfect negative correlation). A coefficient of 0 indicates that there is no correlation.
+
+Let’s take an example. I like examples, they examplify things well.
+
+So, a cook named James does his best to win a Chili cook-off. We have recorded his rank in regard to the amount of spices he put in his chili. Should we look at the correlation between those two variables?
+
+
 Importing our data, making graph.
 ```{r}
 rank <- c(1,5,10,15,20)
@@ -32,12 +51,28 @@ coef_of_determination <- -0.072^2
 ```
 
 In the case you’re dealing with data that are not bivariately normally distributed, you need to use Spearman’s rank correlation (aka Spearman’s R), especially if dealing with little data. To do so, you simply need to specify to the function cor.test that you want to use Spearman’s method in the function’s arguments:
-
 ```{r}
 cor.test(spice,rank,method="spearman")
-
 ```
 
+Haha. Well, yes, this test is statistically significant with a p-value of 0.03893. But look at the 95 percent confidence interval. Our “true” correlation coefficient is almost certainly between -0.993 and -0.072… It could be as “low” (i.e. as close to zero) as -0.072. In turn, to see the strength of the relationship (a.k.a. coefficient of determination or R-squared), we need to square this value. The coefficient of determination gives you the fraction of variance explained by the model.
+```{r}
+-0.072^2
+```
+
+In the case you’re dealing with data that are not bivariately normally distributed, you need to use Spearman’s rank correlation (aka Spearman’s R), especially if dealing with little data. To do so, you simply need to specify to the function cor.test that you want to use Spearman’s method in the function’s arguments:
+```{r}
+cor.test(spice,rank,method="spearman")
+```
+
+As you can see here, by removing one constraint, we are losing power in our test and are not detecting a statistically significant correlation coefficient.
+
+
+------------------------------------------------------------------------------------------------------------------
+
+#Regression between two variables
+
+Determining the slope linking two variables: the simple linear regression
 
 Now that we know how to estimate the strength of a relationship between two variables, we can try to define this relationship.
 
@@ -46,36 +81,55 @@ The simple linear regression is used when trying to find the relationship betwee
 Example time
 
 A certain individual named Walter White is trying to figure out the relationship between the purity of his product, and the price people are willing to pay for it:
-
 ```{r}
-profit <- data.frame(purity=c(4.5,9,22.5,45,90),price=c(22.45,66.81,209.19,508.06,998.13))
+profit = data.frame(purity=c(4.5,9,22.5,45,90),price=c(22.45,66.81,209.19,508.06,998.13))
 profit
+
+profit %>%
+  ggplot(aes(purity, price)) +
+  geom_point()
 ```
 
 For line regression:
 ```{r}
-results <- lm(price ~purity, data=profit)
+results = lm(price ~purity, data=profit)
 
 summary(results)
 ```
 
+A little help to interpret the results?
+
+First, R is reminding us about what we asked him to do. Then, the residuals. Residuals correspond to the distance left between our data points and the regression line. If residuals are systematically positive, then negative (or the other way around), it means that our data are probably not linear. The relationship between our 2 variables might be better explained by a curve for example (but a look at the raw data should have already raised some suspicion). No real problem in our case. The rest of the table can be analyzed as the results of an ANOVA. Here, the intercept is not significantly different from 0 (p=0.057). It could be interpreted as: for a purity of 0, nobody would be willing to pay anything for Heisenberg… erm, sorry… for Walt’s product. The purity effect is statistically highly significant (p<0.001). This would attest a causal relationship: the purer the product, the more expensive it can be.
+
+We could then write this relationship as:
+
+ price=11.54*purity – 33.88′
+
+Oh, and by the way, noticed that our table also returns the coefficient of determination? Here, 0.9987.
+
+Before going further, I have a request: do me a favor and don’t blindly accept the results of a linear regression. While the summary provided is certainly interesting, as it is right now, it’s missing elements that will allow us to evaluate the model’s suitability at explaining our data. The easiest way of doing so is to visually examine the residuals. To determine if the model is appropriate, it has to meet certain criteria such as:
+
+the residual errors should be random and normally distributed,
+removing one case should not significantly impact the model’s suitability.
+
+R provides four graphical approaches to evaluate a model by plotting the linear regression results:
 ```{r}
 plot(results)
-
-#The first plot (top-left) shows the residual errors plotted against the fitted values. The residuals should be randomly distributed around the horizontal line. No distinct trend or pattern should be visible in this graph. A graph presenting points that follow a curve or a trend instead of the horizontal line would be indicative of non-linear or biased residuals. A conic points cloud would indicate heteroskedasticity (feel free to use this word when playing Scrabble, it always impresses people). Simply put, variance would not be constant over the data range (it could for example increase as the explanatory variable increases. Both of those are indications that the model is not adapted to our data. On a side note, you might have noticed that this plot is simply a rotation of the plot “y in function of x”, so that the linear regression line is horizontal.
-
-#The second plot (top-right) is a standard Q-Q plot. As we have seen with the ANOVA, it allows us to check that residual errors are normally distributed. If it is the case, they should follow the diagonal line indicating normality.
-
-#The third plot (lower-left) is called a scale-location plot. It shows the square root of the standardized residuals as a function of the fitted values. Once again, if your model is suitable, you should not detect any obvious trend in this plot.
-
-#And finally, the fourth plot (lower-right) will represent each point’s leverage. The higher the leverage, the more important the corresponding point is in determining the regression coefficient/results. Superimposed on the plot are contour lines for the Cook’s distance. This presents another measure of the importance of each observation to the regression. A smaller distance means that removing the corresponding observation would not impact regression results. However, distances larger than 1 are suspicious and could indicate that the presence of an outlier or that we have a poor model.
 ```
+The first plot (top-left) shows the residual errors plotted against the fitted values. The residuals should be randomly distributed around the horizontal line. No distinct trend or pattern should be visible in this graph. A graph presenting points that follow a curve or a trend instead of the horizontal line would be indicative of non-linear or biased residuals. A conic points cloud would indicate heteroskedasticity (feel free to use this word when playing Scrabble, it always impresses people). Simply put, variance would not be constant over the data range (it could for example increase as the explanatory variable increases. Both of those are indications that the model is not adapted to our data. On a side note, you might have noticed that this plot is simply a rotation of the plot “y in function of x”, so that the linear regression line is horizontal.
 
+The second plot (top-right) is a standard Q-Q plot. As we have seen with the ANOVA, it allows us to check that residual errors are normally distributed. If it is the case, they should follow the diagonal line indicating normality.
 
+The third plot (lower-left) is called a scale-location plot. It shows the square root of the standardized residuals as a function of the fitted values. Once again, if your model is suitable, you should not detect any obvious trend in this plot.
+
+And finally, the fourth plot (lower-right) will represent each point’s leverage. The higher the leverage, the more important the corresponding point is in determining the regression coefficient/results. Superimposed on the plot are contour lines for the Cook’s distance. This presents another measure of the importance of each observation to the regression. A smaller distance means that removing the corresponding observation would not impact regression results. However, distances larger than 1 are suspicious and could indicate that the presence of an outlier or that we have a poor model.
+
+In the case of a simple linear model with one covariate, it is really easy to plot those results. First we plot our points:
 ```{r}
 plot(price ~ purity, data = profit)  
 ```
 
+Then, we just need to add the fitted line from the object containing the linear regression results:
 ```{r}
 abline(results, col="red" )
 
@@ -93,9 +147,9 @@ xnew <- seq(min(profit$purity), max(profit$purity),
             length.out = 100)
 
 expl.pred <- data.frame(purity = xnew)
-
-#The function “seq(A,B, length.out =N)” creates a vector containing a sequence of N values ranging from A to B, but more on that later.
 ```
+
+The function “seq(A,B, length.out =N)” creates a vector containing a sequence of N values ranging from A to B, but more on that later.
 
 We then feed the model, and the data frame containing the explanatory variable (‘purity’) values over which we want to predict our response variable (‘profit’). We can even ask for the 95% confidence interval by setting ‘interval = “confidence” ‘ and ‘level = 0.95’
 ```{r}
@@ -209,7 +263,6 @@ summary(lm(sweetness~honey+stir))
 Noticed how the model can’t compute a coefficient for the “stir” factor? Well, it is not surprising since this factor is by itself not responsible for any variation in our response variable. On the other hand, we manage to detect a link between the honey and the sweetness, but it doesn’t make any sense based on what we defined. If we were to make inferences based on that, we would be totally wrong.
 
 Now, if we consider the interaction:
-
 ```{r}
 summary(lm(sweetness~honey + stir + honey:stir))
 ```
@@ -258,7 +311,6 @@ The normal distribution – The linear models we have used so far aimed at estim
 The binomial distribution – The binomial distribution will be used when facing a) a binary variable (presence/absence, success/failure, yes/no) or b) the repetition of a binary variable (number of occupied sites in a given area for example). In situation a), only one parameter is necessary to model the response variable: the event probability. In case b), two parameters are necessary: the probability of a single event, and the number of repetition. As the number of repetition is simply equal to the total of “success” and “failure”, this information is contained in the data. This leaves us with one parameter to once again model our response variable, the probability. Cool, we now just need to find a way to express this probability as a linear combination of our covariates to link our explanatory variables to our response variable!
 
 The Poisson distribution – The Poisson distribution will typically be used for population counts. It has only one parameter (‘lambda’), and makes the assumption that the mean and the variance are equal. Once again, cool, we now just need to find a way to express this mean as a linear combination of our covariates to link our explanatory variables to our response variable! The Poisson distribution is basically what would happen to a binomial distribution for a really low probability (rare events) but over a really large number of trials. As a matter of fact, if we take ‘n’ trials and a probability ‘p’ of the targeted event to happen, the Poisson distribution with a mean ‘np’ can be seen as a good approximation of the binomial distribution if ‘n’ is at least 20 and ‘p’ is smaller than or equal to 0.05, and as an excellent approximation if ‘n’ is greater than or equal to 100 and the product ‘n’ by ‘p’ is lower than or equal to 10. Need proof? Here:
-
 ```{r}
 # Binomial distribution with 100 trials and a probability of success of 0.05
 hist(rbinom(100000,100,0.05),col="yellow")
@@ -302,7 +354,6 @@ The logistic regression
 The logistic regression is the GLM used when the response variable is the result of a binomial distribution and the link function is the logit function.
 
 Let’s take for example the distribution of the spotted dahu (Dahutus maculosus dextrogyrus) in Northern Brittany, France. We studied the presence of the dahu on 10 hills. We went on each hill a different amount of times, and each time we recorded if we had been able to detect this elusive animal. We hypothesize that the presence of the dahu is related to the average slope of the hill. Here are the data:
-
 ```{r}
 data <-data.frame(
       # Site number
@@ -317,13 +368,11 @@ data <-data.frame(
 ```
 
 First things first, let’s take a look at our data.
-
 ```{r}
 plot(ndetect ~slope, data = data)
 ```
 
 In order to conduct a logistic regression, we proceed as for the linear regression, but we also set the argument “family” to “binomial”:
-
 ```{r}
 dahu.res=glm(cbind(ndetect,nNOdetect)~slope,
              family=binomial,
@@ -333,7 +382,6 @@ dahu.res=glm(cbind(ndetect,nNOdetect)~slope,
 We need to enter the response variable as a data frame with two columns, the first column corresponds to the detection, the second column to the non-detection. If I wanted to study a binary variable over several sites, I would simply have to enter a vector of 0 and 1 instead. If I have replicates, I have to enter a data frame with 2 columns.
 
 A look at the results with the function “summary()“:
-
 ```{r}
 summary(dahu.res)
 ```
@@ -347,7 +395,6 @@ We can also evaluate the overall performance of the model. The null deviance sho
 
 
 Adding in our predictor decreased the deviance by 28.878 (=35.412-6.534) points on 1 degree of freedom. The residual deviance is 6.534 on 8 degrees of freedom. We use this to test the overall fit of the model by once again treating this as a chi square value.
-
 ```{r}
 1-pchisq(6.534,8)
 ```
@@ -356,7 +403,6 @@ Adding in our predictor decreased the deviance by 28.878 (=35.412-6.534) points 
 A chi square of 6.534 on 8 degrees of freedom yields a p-value of 0.5876389. The null hypothesis (i.e., the model) is not rejected. The fitted values are not significantly different from the observed values. The model including hills’ slope provides a good fit to our dahu observation data. 
 
 As previously for the linear regression, if we want to plot the fitted line, we need to first get the results of the model (already done). Secondly, we need a data frame containing the values of the explanatory variables for which we are trying to predict the response variable.
-
 ```{r}
 slope.new <- seq(min(data$slope), max(data$slope), length.out = 100)
 
@@ -365,7 +411,6 @@ expl.pred=data.frame(slope=slope.new)
 
 
 And finally, we use the “predict()” function with the model results and predictive variables. In the case of GLMs, the predicted response values are returned on the scale of the linear predictors (i.e. here the probabilities on logit scale, the log-odds). If we want to plot them, we will need to indicate the function that we want to have our predictions on the same scale as the response variable (i.e. the ratio of “success” over the total number of trials). This is achieved by setting the argument “type” to the value “response”. The predict function now returns the success response probability in function of the explanatory variable.
-
 ```{r}
 resp.pred <- predict(dahu.res, newdata=expl.pred, type="response")
 
@@ -373,7 +418,6 @@ resp.pred <- predict(dahu.res, newdata=expl.pred, type="response")
 
 
 Now, we just have to plot all of that. Remember that the predict function return fitted results on the probability scale, and therefore we need to plot the ratio of detection over the total number of sampling occasion (instead of simply the number of detections) in function of the covariate. The function “title()” is used to add a title and possibly other elements to a graph (more details on that in the next section).
-
 ```{r}
 plot(ndetect/(ndetect+nNOdetect) ~ slope, data=data)
 lines(resp.pred ~ expl.pred$slope,col="red")      # Fitted values
@@ -397,7 +441,6 @@ pred.linkscale.CI97.5=pred.linkscale$fit+1.96*pred.linkscale$se.fit
 
 
 Let’s back-transform from the linear scale to the response scale. To do that, we can feed the predicted values on the linear scale to the inverse link function. It’s possible to access the family used in the analysis with the function “family()”. This function takes as argument the object containing the GLM results, and returns (among other things) the inverse link function in the element “linkinv”.
-
 ```{r}
 pred.respScale.CI=data.frame(
                     CI2.5=family(dahu.res)$linkinv(pred.linkscale.CI2.5),
@@ -445,26 +488,23 @@ fish.data=data.frame(sitenumber=1:100,
 
 Quick look:
 ```{r}
-plot(fish.population~food,fish.data)
+plot(fish.population ~food, fish.data)
 ```
 
 Want to do a Poisson regression? No worries mate, you just use the “glm()” function and set the argument “family” to “Poisson” (go figure…):
-
 ```{r}
-fish.res=glm(fish.population~food,
-             family=poisson,
-             data=fish.data)
+fish.res=glm(fish.population ~food,
+             family = poisson,
+             data = fish.data)
 ```
 
 As usual, to get a summary of our model’s results, we use the well-named function “summary()”.
-
 ```{r}
 summary(fish.res)
 ```
 
 
 First things first, how is the model fitting? The Null deviance and the corresponding degrees of freedom indicate a highly significant difference between fitted values and observed values:
-
 ```{r}
 1-pchisq(fish.res$null.deviance,fish.res$df.null)
 ```
@@ -472,7 +512,6 @@ First things first, how is the model fitting? The Null deviance and the correspo
 Noticed how I directly extracted the “null.deviance” and the number of degrees of freedom “df.null” from the GLM output?
 
 Once the predictor is added, it’s a different story!
-
 ```{r}
 1-pchisq(fish.res$deviance,fish.res$df.residual)
 ```
