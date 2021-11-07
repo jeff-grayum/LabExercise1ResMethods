@@ -282,20 +282,27 @@ summary(lm(sweetness ~honey * stir))
 
 In this case, the multiplication is not considered in its mathematical meaning. If you want to use a mathematical operation with its mathematical meaning instead of its “model specification meaning”, you have to input the corresponding element with the function ‘I()‘. For example:
 ```{r}
-x=c(1,2,3,4,5,6,7,8,9,10)
-y=3*x + 4*x^2
+x = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+y = 3*x + 4*x^2
 ```
 
 Let’s see what happens if we simply model ‘y’ in function of ‘x’.
 ```{r}
-summary(lm(y~x))
+summary(lm(y ~x))
 ```
 
 Doesn’t really make sense. Let’s include the quadratic component on top of the linear component:
 ```{r}
-summary(lm(y~I(x*x)+x))
+summary(lm(y ~I(x*x)+x))
 ```
 
+We get what we were expecting. Without the function “I()”, R would have read this as “y in function of x and the interaction between x and x”
+
+
+----------------------------------------------------------------------------------------------------------------
+
+
+Generalized Linear Models
 
 The linear models we used so far allowed us to try to find the relationship between a continuous response variable and explanatory variables. One way of understanding it is that the response variable is following a normal distribution which has a mean equal to a linear combination of the explanatory variables. Simply put, the response variable is equal to a linear combination of the covariates plus some random noise, and this random noise has normal distribution. This is one of the things we were checking with the Q-Q plot.
 
@@ -307,7 +314,7 @@ A generalization of this approach can be used when dealing with a response varia
 
 3/ Discrete: Trying to model a population’s abundance. We are counting individuals. Chances are that we are not going to find 0.24 or 17.2 or 82.7458 individuals. We are modeling a discrete number of individuals. The linear approach could not only give us half individuals in the regression, but could also lead us to predict negative numbers of individuals for certain values of the covariates.
 
-We need a solution to accommodate those situations! Enter the GLMs! The Generalized Linear Models. (Normally, as you read that, The Ride of the Valkyries should be playing in your head.) GLMs are composed of three elements: a probability distribution, a link function and a linear predictor. The probability distribution illustrates the randomness in the response variable. The link function “links” the parameters controlling the probability distribution parameter(s) to the linear predictor. The linear predictor is a linear combination of covariates we hypothesize to be related to the response variable.
+We need a solution to accommodate those situations! Enter the GLMs! The Generalized Linear Models. (Normally, as you read that, The Ride of the Valkyries should be playing in your head.) GLMs are composed of three elements: a probability distribution, a link function, and a linear predictor. The probability distribution illustrates the randomness in the response variable. The link function “links” the parameters controlling the probability distribution parameter(s) to the linear predictor. The linear predictor is a linear combination of covariates we hypothesize to be related to the response variable.
 
 
 
@@ -319,12 +326,15 @@ The normal distribution – The linear models we have used so far aimed at estim
 The binomial distribution – The binomial distribution will be used when facing a) a binary variable (presence/absence, success/failure, yes/no) or b) the repetition of a binary variable (number of occupied sites in a given area for example). In situation a), only one parameter is necessary to model the response variable: the event probability. In case b), two parameters are necessary: the probability of a single event, and the number of repetition. As the number of repetition is simply equal to the total of “success” and “failure”, this information is contained in the data. This leaves us with one parameter to once again model our response variable, the probability. Cool, we now just need to find a way to express this probability as a linear combination of our covariates to link our explanatory variables to our response variable!
 
 The Poisson distribution – The Poisson distribution will typically be used for population counts. It has only one parameter (‘lambda’), and makes the assumption that the mean and the variance are equal. Once again, cool, we now just need to find a way to express this mean as a linear combination of our covariates to link our explanatory variables to our response variable! The Poisson distribution is basically what would happen to a binomial distribution for a really low probability (rare events) but over a really large number of trials. As a matter of fact, if we take ‘n’ trials and a probability ‘p’ of the targeted event to happen, the Poisson distribution with a mean ‘np’ can be seen as a good approximation of the binomial distribution if ‘n’ is at least 20 and ‘p’ is smaller than or equal to 0.05, and as an excellent approximation if ‘n’ is greater than or equal to 100 and the product ‘n’ by ‘p’ is lower than or equal to 10. Need proof? Here:
-```{r}
-# Binomial distribution with 100 trials and a probability of success of 0.05
-hist(rbinom(100000,100,0.05),col="yellow")
 
-  # Poisson distribution with a mean of 100*0.05
-hist(rpois(100000,lambda=100*0.05),add=T,col="#0000ff66")
+Binomial distribution with 100 trials and a probability of success of 0.05
+```{r}
+hist(rbinom(100000,100,0.05), col="yellow")
+```
+
+Poisson distribution with a mean of 100*0.05
+```{r}
+hist(rpois(100000, lambda=100*0.05), add=T, col="#0000ff66")
 ```
 
 
@@ -338,7 +348,6 @@ The link function for the normal distribution is the identity function. Basicall
 
 The link function for the binomial distribution is the logit function. It allows to define a linear combination that varies between -Infinity and + Infinity and to transfer it on a 0 to 1 probability scale. For information, the logit of a probability ‘p’ is equal to the logarithm of the odds:
 
-
 logit(p) = log(p / (1-p))
 
 The link function for the Poisson distribution is the log function.
@@ -350,7 +359,7 @@ The linear predictor
 Now that we can link our response variable to the explanatory variables, we just need to define the linear predictor in the same way we have always done. And voila! We’ll be doing GLMs in no time. Let’s practice!
 
 
-How to in practice
+How to in practice:
 GLMs in R are performed with the function “glm()“. This function, as the linear regressions we have done so far, needs a model express through a formula and some data. One more argument needs to be specified: the family. The family is the description of the error distribution and link function to be used in the model. In practice, you will set this argument to “binomial” for a logistic regression, to “poisson” for a Poisson regression, and “gaussian” for a linear regression. More details and options about the families available are presented in the help of the “family()” function, but those should do the trick for the most common problems you will be facing. What about a couple of practical examples?
 
 
@@ -382,9 +391,9 @@ plot(ndetect ~slope, data = data)
 
 In order to conduct a logistic regression, we proceed as for the linear regression, but we also set the argument “family” to “binomial”:
 ```{r}
-dahu.res=glm(cbind(ndetect,nNOdetect)~slope,
-             family=binomial,
-             data=data)
+dahu.res = glm(cbind(ndetect, nNOdetect) ~slope,
+             family = binomial,
+             data = data)
 ```
 
 We need to enter the response variable as a data frame with two columns, the first column corresponds to the detection, the second column to the non-detection. If I wanted to study a binary variable over several sites, I would simply have to enter a vector of 0 and 1 instead. If I have replicates, I have to enter a data frame with 2 columns.
@@ -398,7 +407,7 @@ As for the linear models we have used so far, R returns estimates of the model c
 
 We can also evaluate the overall performance of the model. The null deviance shows how well the response is predicted by a model with nothing but an intercept. This is essentially a chi square value on 9 degrees of freedom, and indicates very little fit (a highly significant difference between fitted values and observed values).
 ```{r}
-1-pchisq(35.412,9)
+1 - pchisq(35.412, 9)
 ```
 
 
@@ -412,30 +421,28 @@ A chi square of 6.534 on 8 degrees of freedom yields a p-value of 0.5876389. The
 
 As previously for the linear regression, if we want to plot the fitted line, we need to first get the results of the model (already done). Secondly, we need a data frame containing the values of the explanatory variables for which we are trying to predict the response variable.
 ```{r}
-slope.new <- seq(min(data$slope), max(data$slope), length.out = 100)
+slope.new = seq(min(data$slope), max(data$slope), length.out = 100)
 
-expl.pred=data.frame(slope=slope.new)
+expl.pred = data.frame(slope = slope.new)
 ```
 
 
 And finally, we use the “predict()” function with the model results and predictive variables. In the case of GLMs, the predicted response values are returned on the scale of the linear predictors (i.e. here the probabilities on logit scale, the log-odds). If we want to plot them, we will need to indicate the function that we want to have our predictions on the same scale as the response variable (i.e. the ratio of “success” over the total number of trials). This is achieved by setting the argument “type” to the value “response”. The predict function now returns the success response probability in function of the explanatory variable.
 ```{r}
-resp.pred <- predict(dahu.res, newdata=expl.pred, type="response")
-
+resp.pred = predict(dahu.res, newdata = expl.pred, type = "response")
 ```
 
 
 Now, we just have to plot all of that. Remember that the predict function return fitted results on the probability scale, and therefore we need to plot the ratio of detection over the total number of sampling occasion (instead of simply the number of detections) in function of the covariate. The function “title()” is used to add a title and possibly other elements to a graph (more details on that in the next section).
 ```{r}
 plot(ndetect/(ndetect+nNOdetect) ~ slope, data=data)
-lines(resp.pred ~ expl.pred$slope,col="red")      # Fitted values
+lines(resp.pred ~ expl.pred$slope, col="red")  # Fitted values
+title(main = "Dahu detection rate with Fitted Logistic Regression Line")
 ```
 
-
-title(main="Dahu detection rate with Fitted Logistic Regression Line")
 We can easily compute and add the prediction’s 95% confidence interval. To do so, first we compute the predicted values on the linear scale, and ask for the corresponding standard errors.
 ```{r}
-pred.linkscale <- predict(dahu.res, newdata=expl.pred, se=T)
+pred.linkscale <- predict(dahu.res, newdata = expl.pred, se = T)
 
 ```
 
@@ -450,12 +457,14 @@ pred.linkscale.CI97.5=pred.linkscale$fit+1.96*pred.linkscale$se.fit
 
 Let’s back-transform from the linear scale to the response scale. To do that, we can feed the predicted values on the linear scale to the inverse link function. It’s possible to access the family used in the analysis with the function “family()”. This function takes as argument the object containing the GLM results, and returns (among other things) the inverse link function in the element “linkinv”.
 ```{r}
-pred.respScale.CI=data.frame(
-                    CI2.5=family(dahu.res)$linkinv(pred.linkscale.CI2.5),
-                    CI97.5=family(dahu.res)$linkinv(pred.linkscale.CI97.5)
-                             )
-#What’s left to do? Simply plot the corresponding lines!
+pred.respScale.CI = data.frame(
+                    CI2.5 = family(dahu.res)$linkinv(pred.linkscale.CI2.5),
+                    CI97.5 = family(dahu.res)$linkinv(pred.linkscale.CI97.5)
+                          )
+```
 
+What’s left to do? Simply plot the corresponding lines!
+```{r}
 # Lower CI 95%
 lines(pred.respScale.CI$CI2.5~expl.pred$slope,lty="dashed")
 # Upper CI 95%
@@ -501,7 +510,7 @@ plot(fish.population ~food, fish.data)
 
 Want to do a Poisson regression? No worries mate, you just use the “glm()” function and set the argument “family” to “Poisson” (go figure…):
 ```{r}
-fish.res=glm(fish.population ~food,
+fish.res = glm(fish.population ~food,
              family = poisson,
              data = fish.data)
 ```
@@ -514,18 +523,16 @@ summary(fish.res)
 
 First things first, how is the model fitting? The Null deviance and the corresponding degrees of freedom indicate a highly significant difference between fitted values and observed values:
 ```{r}
-1-pchisq(fish.res$null.deviance,fish.res$df.null)
+1-pchisq(fish.res$null.deviance, fish.res$df.null)
 ```
 
 Noticed how I directly extracted the “null.deviance” and the number of degrees of freedom “df.null” from the GLM output?
 
 Once the predictor is added, it’s a different story!
 ```{r}
-1-pchisq(fish.res$deviance,fish.res$df.residual)
+1-pchisq(fish.res$deviance, fish.res$df.residual)
 ```
 
-
-0.6283983
 Now, the fitted values are not significantly different from the observed values. We therefore cannot reject the null hypothesis, i.e. the model.
 
 We also see here that we have statistically significant intercept and food effect. We can also directly extract the corresponding coefficient values from the GLM output:
@@ -552,23 +559,28 @@ And, as for the previous fitted models, we can plot the fitted line in the follo
 
 ```{r}
 food.new <- seq(min(fish.data$food), max(fish.data$food), length.out = 100)     # Creating new values of the covariates for which we want to predict the response variable
+
 expl.pred=data.frame(food=food.new)
-resp.pred <- predict(fish.res, newdata=expl.pred, type="response")          # Predictions
+
+resp.pred <- predict(fish.res, newdata = expl.pred, type="response")          # Predictions
+
 plot(fish.population~ food, data=fish.data)
+
 lines(resp.pred ~ expl.pred$food,col="red")      # Fitted values
+
 title(main="Fish abundance depending on food resources \n with Fitted Poisson Regression Line")
 ```
 
 And compute and plot the prediction’s 95% confidence interval:
 ```{r}
-pred.linkscale <- predict(fish.res, newdata=expl.pred, se=T)
-pred.linkscale.CI2.5 = pred.linkscale$fit-1.96*pred.linkscale$se.fit
-pred.linkscale.CI97.5 = pred.linkscale$fit+1.96*pred.linkscale$se.fit
+pred.linkscale <- predict(fish.res, newdata = expl.pred, se = T)
+pred.linkscale.CI2.5 = pred.linkscale$fit - 1.96 * pred.linkscale$se.fit
+pred.linkscale.CI97.5 = pred.linkscale$fit + 1.96 * pred.linkscale$se.fit
 pred.respScale.CI=data.frame(
-                   CI2.5=family(fish.res)$linkinv(pred.linkscale.CI2.5),
-                   CI97.5=family(fish.res)$linkinv(pred.linkscale.CI97.5))
-lines(pred.respScale.CI$CI2.5 ~ expl.pred$food,lty="dashed")
-lines(pred.respScale.CI$CI97.5 ~ expl.pred$food,lty="dashed")
+                   CI2.5 = family(fish.res)$linkinv(pred.linkscale.CI2.5),
+                   CI97.5 = family(fish.res)$linkinv(pred.linkscale.CI97.5))
+lines(pred.respScale.CI$CI2.5 ~ expl.pred$food,lty = "dashed")
+lines(pred.respScale.CI$CI97.5 ~ expl.pred$food,lty = "dashed")
 ```
 
 
