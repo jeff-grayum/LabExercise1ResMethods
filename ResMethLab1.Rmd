@@ -174,39 +174,31 @@ lines(resp.pred$upr ~ expl.pred$purity, lty = "dashed") # Upper 95% interval
 ```
 
 Exercise 3.3
- – Create a vector ‘exp.var’ of 100 values following a uniform distribution ranging from 0 to 50
-
- – Create a vector ‘slope.var’ of 100 values following a normal distribution with a mean of 4.3 and a standard deviation of 0.5
-
- – Create a vector ‘inter.var’ of 100 values following a normal distribution with a mean of 2.7 and a standard deviation of 0.2
-
- – Create a vector ‘resp.var’ equal to the product of ‘exp.var’ and ‘slope.var’ plus ‘inter.var’
-
- – Plot ‘resp.var’ against ‘exp.var’
-
- – Calculate and test the correlation between ‘resp.var’ and ‘exp.var’
-
- – Compute the regression analysis modeling ‘resp.var’ in function of ‘exp.var’
-
- – Plot the results of the regression analysis<
-
- – Plot the regression line over the data
 ```{r}
-exp.var=runif(100,0,50)
+# Create a vector ‘exp.var’ of 100 values following a uniform distribution ranging from 0 to 50
+exp.var = runif(100, 0, 50)
 
-slope.var=rnorm(100,4.3,0.5)
+#Create a vector ‘slope.var’ of 100 values following a normal distribution with a mean of 4.3 and a standard deviation of 0.5
+slope.var = rnorm(100, 4.3, 0.5)
 
-inter.var=rnorm(100,2.7,0.2)
+#Create a vector ‘inter.var’ of 100 values following a normal distribution with a mean of 2.7 and a standard deviation of 0.2
+inter.var = rnorm(100, 2.7, 0.2)
 
-resp.var=exp.var*slope.var+inter.var
+#Create a vector ‘resp.var’ equal to the product of ‘exp.var’ and ‘slope.var’ plus ‘inter.var’
+resp.var = exp.var * slope.var + inter.var
 
-plot(exp.var,resp.var)
+#Plot ‘resp.var’ against ‘exp.var’
+plot(exp.var, resp.var)
 
+#Calculate and test the correlation between ‘resp.var’ and ‘exp.var’
 cor(exp.var,resp.var)
 
+#Compute the regression analysis modeling ‘resp.var’ in function of ‘exp.var’
 cor.test(exp.var,resp.var)
 
-results=lm(resp.var~exp.var)  
+#Plot the results of the regression analysis
+results = lm(resp.var ~exp.var)  
+plot(results)
 #we stock the results in an object named "results"
 #(because we're smart)
 
@@ -214,13 +206,23 @@ summary(results)
 #we ask for a summary of the results
 #(because we're curious)
 
+
+#Plot the regression line over the data
+plot(exp.var, resp.var)
 abline(results, col="red" )
 ```
 
+
+----------------------------------------------------------------------------------------------------------------
+
+
+Determining the slope linking more than two variables: the multiple linear regression
+
 We do not need to limit ourselves to 2 variables (1 response vs 1 explanatory). It is frequent in ecological studies to consider the potential relationship between the parameter of interest (such as abundance) and multiple covariates (e.g. precipitations, temperatures, density). Linear models can be used to model the relationship between a continuous response/dependent variable and several explanatory variables. This approach can however only deal with a linear combination of said explanatory variables. That’s why it’s called a linear model.
+
 So, how do you specify a model with several components? Easy, by “adding” them with a ‘+’ sign.
 ```{r}
-x1 = c(1,2,3,4,5,6,7,8,9,10)
+x1 = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 x2 = rnorm(length(x1), 5, 4)
 
@@ -237,27 +239,33 @@ Similarly, we can remove a parameter from the model by using the sign ‘-‘. F
 ```{r}
 y = 4*x1 + 3*x2
 
-#With intercept:
+```
 
+With intercept:
+```{r}
 summary(lm(y ~x1 + x2))
 
-#Without intercept:
+```
 
+Without intercept:
+```{r}
 summary(lm(y ~x1 + x2 - 1))
 ```
 
 While this might not appear important here, this can become interesting to use when using factors, as -by default- the first factor class will be equal use as the intercept.
 
+
+
 If you work with ecological questions, you will want to consider possible interactions between covariates. For example, let’s look at the sweetness of my tea in function of the amount of honey I put in it, and the number of times I stir it. If I stir my tea without honey, it’s not going to change how sweet it is. If I put honey without stirring, the tea is not going to taste much sweeter. BUT, if I put honey and stir, the tea is going to become increasingly sweeter. There is an interaction between the amount of honey and the stirring. In order to consider the interaction between those 2 variables, we use the sign ‘:’ between the 2 covariates.
 ```{r}
-honey=c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5)
-stir=c(1,2,3,4,5,6,7,8,9,10,11)
-sweetness= 0.1*honey + 0*stir + 2*honey*stir + rnorm(length(honey),0,1)
+honey = c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5)
+stir = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+sweetness = (0.1 * honey) + (0 * stir) + (2 * honey*stir) + rnorm(length(honey), 0, 1)
 ```
 
 Sweetness in function of honey and stirring, but without considering the interaction:
 ```{r}
-summary(lm(sweetness~honey+stir))
+summary(lm(sweetness ~honey + stir))
 ```
 
 Noticed how the model can’t compute a coefficient for the “stir” factor? Well, it is not surprising since this factor is by itself not responsible for any variation in our response variable. On the other hand, we manage to detect a link between the honey and the sweetness, but it doesn’t make any sense based on what we defined. If we were to make inferences based on that, we would be totally wrong.
@@ -269,7 +277,7 @@ summary(lm(sweetness~honey + stir + honey:stir))
 
 Much better! By the way, instead of writing this long equation saying “take my first factor, AND take my second factor AND take the INTERACTION between them”, we can use the sign ‘*’. This way, we are specifying all of the above directly:
 ```{r}
-summary(lm(sweetness~honey*stir))
+summary(lm(sweetness ~honey * stir))
 ```
 
 In this case, the multiplication is not considered in its mathematical meaning. If you want to use a mathematical operation with its mathematical meaning instead of its “model specification meaning”, you have to input the corresponding element with the function ‘I()‘. For example:
